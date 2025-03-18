@@ -1,9 +1,7 @@
 package com.decolatech.gerenciamento_de_estoque.service;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.decolatech.gerenciamento_de_estoque.exeptions.RecursoNaoEncontradoExeption;
