@@ -1,16 +1,26 @@
-FROM ubuntu:latest AS build
+FROM openjdk:21-slim as build
 
-RUN apt-get update
-RUN apt-get install openjdk-17-jdk -y
-COPY . .
+WORKDIR /workspace/app
 
-RUN apt-get install maven -y
-RUN mvn clean install 
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+COPY src src
 
-FROM openjdk:17-jdk-slim
+RUN chmod -R 777 ./mvnw
 
-EXPOSE 8080
+RUN ./mvnw install -DskipTests
 
-COPY --from=build /target/deploy_render-1.0.0.jar app.jar
+RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
-ENTRYPOINT [ "java", "-jar", "app.jar" ]
+FROM openjdk:21-slim
+
+VOLUME /tmp
+
+ARG DEPENDENCY=/workspace/app/target/dependency
+
+COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
+COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
+
+ENTRYPOINT ["java","-cp","app:app/lib/*","com.projeto.saudehub.SaudeHubApplication"]
